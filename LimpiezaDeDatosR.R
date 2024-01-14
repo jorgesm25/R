@@ -1,90 +1,113 @@
 #---------------------------LIMPIEZA DE DATOS----------------------
+#Quitar coma del precio 2,000 -> 2000
 library(stringr)
 df %>%
-  mutate(precio_new = as.numeric(str_remove(precio, ","))) #Quitar coma del precio 2,000 -> 2000
+  mutate(precio_new = as.numeric(str_remove(precio, ","))) 
 
+#encontrar valores fuera de rango
 library(assertive)
-assert_all_are_in_closed_range(df$precio, lower = 0, upper = 500) #encontrar valores fuera de rango
+assert_all_are_in_closed_range(df$precio, lower = 0, upper = 500) 
 
-df %>% #reemplazar los valores fuera de rango por valor o NA 
+#reemplazar los valores fuera de rango por valor o NA
+df %>%  
   mutate(precio = #sobre escribe la columna precio ya existente
            replace(precio, precio > 500, NA))
 
 
-#Fechas
-assert_all_are_in_past(df$fecha) #verificar si todas la fechas están en pasado  
+#***************Fechas***************
+#verificar si todas la fechas están en pasado
+assert_all_are_in_past(df$fecha)   
 
+#encontrar fecha fuera de rango
 library(lubridate)
-df %>% #encontrar fecha fuera de rango
+df %>% 
   filter(fecha > today())
 
-df %>% #filtras las fechas correctas
+#filtras las fechas correctas
+df %>% 
   filter(fecha <= today())
 
-#Duplicados
-sum(duplicated(df)) #Cuantas filas están duplicadas
-filter(df, duplicated(df)) #ver las filas duplicadas
-df <- distinct(df) #eliminar filas duplicadas
+#***************Duplicados***************
+#Cuantas filas están duplicadas
+sum(duplicated(df))
 
+#ver las filas duplicadas
+filter(df, duplicated(df))
 
-df_duplicados <- df %>% #encontrar duplicados parcialmente
+#eliminar filas duplicadas
+df <- distinct(df) 
+
+#encontrar duplicados parcialmente
+df_duplicados <- df %>% 
   count(nombre, apellido) %>%
   filter(n > 1)
 
-credit_scores %>% #ver duplicados parcialmente
+#ver duplicados parcialmente
+credit_scores %>% 
   filter(nombre %in% df_duplicados$nombre,
          apellido %in% df_duplicados$apellido)
 
 df %>% #eliminar duplicados
   distinct(nombre, apellido, .keep_all = TRUE) 
 
-df %>% #eliminar duplicados conservando un promedio de las filas duplicadas
+#eliminar duplicados conservando un promedio de las filas duplicadas
+df %>% 
   group_by(nombre, apellido) %>%
   mutate(media_credito = mean(credito)) %>%
   distinct(nombre, apellido, .keep_all = TRUE) %>%
   select(-credito)
 
 #--------------CATEGORIAS-------------------------------
-df %>% #cambia la columna tipo a minúscula (str_to_upper para mayucula) 
-  mutate(tipo_new = str_to_lower(tipo)) %>% #y cuenta las categorias
+#cambia la columna tipo a minúscula (str_to_upper para mayúscula)
+df %>%  
+  mutate(tipo_new = str_to_lower(tipo)) %>% #cuenta las categorías
   count(type_new)
 
-df %>% #elimina espacios antes y despues (no en medio)
+#elimina espacios antes y después (no en medio)
+df %>% 
   mutate(tipo = str_trim(tipo)) %>%
   count(tipo)
 
-df %>% #contar categorias
+#contar categorías
+df %>% 
   count(tipo, sort = TRUE)
 
-perros = c("poodle", "labrador", "beagle") #colapsar similares
+#colapsar similares en una sola categoria
+perros = c("poodle", "labrador", "beagle") 
 
 library(forcats)
-df %>% #crea una nueva columna (o sobreescribe) las razas se colpasan en "perro"
+df %>% #crea una nueva columna (o sobreescribe) las razas se colapsan en "perro"
   mutate(tipo_new = fct_collapse(tipo, perro = perros))
 
 #--------------CADENAS-------------------------------
-df %>% #ver tarjertas cuyo numero es "1234-1232-2343-2324"
+#ver tarjertas cuyo numero es "1234-1232-2343-2324"
+df %>% 
   filter(str_detect(tarjeta, "-"))
 
-df %>% #reemplaza los guiones por espacios
+#reemplaza los guiones por espacios
+df %>% 
   mutate(tarjeta = str_replace_all(tarjeta, "-", " "))
 
 tarjeta_clean <- df$tarjeta %>% #elimina los -
   str_remove_all("-") %>% #y espacios
-  str_remove_all(" ")# de las tajeras
+  str_remove_all(" ")# de las tarjetas
 customers %>% # de "1234-1232-2343-2324" y "1234 1232 2343 2324"
   mutate(tarjeta = tarjeta_clean) #a "1234123223432324"
 
-str_length(df$tarjeta) #medir la longitud de las tajetas debe ser 16
+#medir la longitud de las tarjetas debe ser 16
+str_length(df$tarjeta) 
 
+#vemos cuales son distintas de 16
 df %>%
-  filter(str_length(tarjeta) != 16) #vemos cuales son distintas de 16
+  filter(str_length(tarjeta) != 16) 
 
+#iguales a 16
 df %>%
-  filter(str_length(tarjeta) == 16) #iguales a 16
+  filter(str_length(tarjeta) == 16) 
 
+#para compara que tan similares son las cadenas
 library(stringdist)
-stringdist("baboon", #para compara que tan similares son las cadenas
+stringdist("baboon", 
            "typhoon",
            method = "dl") #lcs
 
@@ -94,7 +117,7 @@ stringdist("baboon", "typhoon",
 stringdist("baboon", "typhoon",
            method = "jaccard") #entre 0 y 1
 
-#ejemplo donde se usan entradas mal estritas de una encuesta y se corrigen
+#ejemplo donde se usan entradas mal escritas de una encuesta y se corrigen
 encuesta <- data.frame(
   city = c("mxico", "exico", "Mxic", "juadalajara", "uadalajara")
 )
@@ -103,20 +126,21 @@ ciudad <- data.frame( #nombres correctos
 
 stringdist_left_join(encuesta, ciudad, by = "city", method = "dl")#resultado "mxico -> México"
 
-#max_dist para controlar la distancia maxima entre las cadenas si es mayor a la asignda devuelve NA
-stringdist_left_join(survey, cities, by = "city", method = "dl", max_dist = 1) 
+#max_dist para controlar la distancia máxima entre las cadenas si es mayor a la asignada devuelve NA
+stringdist_left_join(encuesta, ciudad, by = "city", method = "dl", max_dist = 1) 
 
 
 #------------------------------------------------DATOS FALTANTES------------------------------------------------
 # regla general no eliminar datos faltantes si rebasan el %5 de la prueba
 library(naniar)
 miss_var_summary(df) #devuelve la variable, # NAs y % de NAs
-miss_case_summary(df) ##fila, #NAs y % de NAs
+miss_case_summary(df) #N° de filas, #NAs y % de NAs
 
-miss_var_table(df) #NAs #variables % de NAs
-miss_case_table(df) #NAs #filas % de NAs
+miss_var_table(df) #NAs, #variables % de NAs
+miss_case_table(df) #NAs, N° de filas % de NAs
 
-vis_miss(df) #Grafica de valores faltantes en cada variable
+#Grafica de valores faltantes en cada variable
+vis_miss(df) 
 gg_miss_var(df)
 gg_miss_case(df) #por fila
 
@@ -126,7 +150,8 @@ gg_miss_upset(df)
 gg_miss_fct(x = df, fct = Residencia)
 gg_miss_span(df, hourly_counts, span_every = 3000)
 
-df %>% #buscar valores NA que estén en otro formato
+#buscar valores NA que estén en otro formato
+df %>% 
   miss_scan_count(search = list("N/A",
                                 "N/a"))
 
@@ -134,44 +159,46 @@ df %>% #buscar valores NA que estén en otro formato
 df %>%
   replace_with_na(replace = list(variable = c("N/A", "N/a")))
 
-df %>% #remplazada por NAs donde las variables son = -99
+#remplazada por NAs donde las variables son = -99
+df %>% 
   replace_with_na_all(condition = ~.x == -99)
 
 df %>%
   replace_with_na_all(condition = ~.x %in% c("N/A", "missing", "na"))
 
-#valores faltantes no registrados
+#completar valores faltantes no registrados
 
-nombre  | tiempo
-Juan    | dia
-Juan    | noche
-Diego   | dia
+#nombre  | tiempo
+#Juan    | dia
+#Juan    | noche
+#Diego   | dia
 
-df %>% #valores faltantes no registrados
+df %>% 
   tidyr::complete(nombre, tiempo) 
 
-nombre  | tiempo
-Juan    | dia
-Juan    | noche
-Diego   | dia
-Diego   | NA
+#nombre  | tiempo
+#Juan    | dia
+#Juan    | noche
+#Diego   | dia
+#Diego   | NA
 
 df %>%
   tidyr::fill(name)
 
-nombre  | tiempo
-Juan    | dia
-NA     | noche
-Diego   | dia
-NA      | noche
+#nombre  | tiempo
+#Juan    | dia
+#NA     | noche
+#Diego   | dia
+#NA      | noche
 
-bind_shadow(df) #crea un df reemplazando valor x !NA o NA
+#crea un df reemplazando valor x !NA o NA
+bind_shadow(df) 
 #ejemplo 
-nombre  | tiempo | nombre_NA  | tiempo_NA  
-Juan    | dia    |    !NA     |  !NA
-Juan    | NA     |    !NA     |   NA
+#nombre  | tiempo | nombre_NA  | tiempo_NA  
+#Juan    | dia    |    !NA     |  !NA
+#Juan    | NA     |    !NA     |   NA
 
-#apartir de estos se puede hacer estadistica de descriptiva
+#a partir de estos se puede hacer estadística de descriptiva
 df %>%
   bind_shadow() %>%
   group_by(Ozone_NA) %>%

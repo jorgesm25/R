@@ -1,5 +1,6 @@
 #----------------------Para girar etiquetas--------------------
 P + theme(axis.text = element_text(angle = 90))
+
 #----------------- Grafica barras con los niveles de grado académico ordenados----
 ggplot(df, aes(x = Grado, fill = Género)) +
   geom_bar(position = "dodge") + 
@@ -61,7 +62,7 @@ ggplot(df, aes(x="", y=Porcentaje, fill=Género)) +
   theme(axis.title = element_text(size = 24, face = "bold"))+
   guides(fill = guide_legend(title = "Género", label.theme = element_text(size = 14,face = "bold")))
 
-#------------------------Grafica de barras para proporciones------------------------
+#---------------------Grafica de columnas para proporciones------------------------
 df %>% ggplot(aes(x = Universidad, y = Porcentaje, fill = Género)) +
   geom_col()
 
@@ -72,6 +73,22 @@ ggplot(df, aes(x = Femenino)) +
   theme(plot.title = element_text(size = 14, face = "bold"),
         axis.title = element_text(size = 12)) +
   labs(title = "Clúster 2", x = "x", y = "F(x)")
+
+#------------------------ECDF para dos grupos------------------------
+new_theme <- theme(axis.text=element_text(size=14),
+                   axis.title=element_text(size=20,face="bold"), legend.text=element_text(size=22),
+                   legend.title = element_text(face = "bold", size = 26), legend.position="top",
+                   axis.line = element_line(colour="black", size=1, lineend="square"),
+                   strip.text.y = element_text(size = 12, colour = "gray30"))
+
+ggplot(df, aes(Femenino, color = Cluster)) + 
+  stat_ecdf(geom = "step", size = 3)+
+  scale_y_continuous(labels = scales::percent) +
+  theme_classic() +
+  new_theme +
+  xlab("Weight") +
+  ylab("Percent")
+
 
 #-----------------------------Correlación---------------------------------
 pairs.panels(df, method = "spearman", cex.cor = 1, col = "blue", pch = 21, bg = "gray80") #puede ser cualquier tipo de correalación
@@ -121,7 +138,7 @@ lines(c(5.5, 5.5), c(0, 5), col = "red")
 lines(c(0, 5.5), c(5, 5), col = "red")
 
 ################################################################################
-#                                     GRAFOS                                   # 
+#                                     REDES                                    # 
 ################################################################################
 grafos <- df
 

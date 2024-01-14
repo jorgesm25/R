@@ -1,8 +1,8 @@
 
 head(df) #6 primeras columnas del df
 glimpse(df) #resumen del tipo de variables 
-dim(df) #filas  x columnas del df
-colnames(df) #columnas del df
+dim(df) #filas x columnas
+colnames(df) #columnas
 summary(df) #resumen estadístico de las variables numéricas
 rm(Universidades) #rm se usa para borrar una variable o df
 class(df$columna) #tipo de dato 
@@ -10,7 +10,7 @@ df %>% group_by(universidad) %>% count() #contar por universidad
 df %>% count(universidad) #contar por universidad
 
 #--------------------------SELECT--------------------------
-df %>% select(nombre, Genero) #selecciona colunmas
+df %>% select(nombre, Genero) #selecciona columnas
 df %>% select(-universidad) #borra un columna
 df %>% select(-c(universidad, salario)) #borrar 2 o + columnas
 df %>% select(where(is.numeric)) #selecciona numéricas (is.character, is.factor)
@@ -20,17 +20,15 @@ df %>% select(contains("dad")) #Selecciona las columnas que contienen "dad"
 #--------------------------FILTER--------------------------
 df %>% filter(salario > 1000) 
 df %>% filter(universidad == "UNAM") 
-df %>% filter((universidad == "UNAM" & salario >= 5533)) #con 2 condiciones se usa & las condiciones van entre ()
-df %>% filter(universidad == "UNAM", salario >= 5533) # lo mismo de arriba
-df %>% filter((universidad == "UNAM" | salario >= 5533)) # | significa o, o es unam o mayor igual a 5533
+df %>% filter((universidad == "UNAM" & salario >= 5533)) #2 o más condiciones
+df %>% filter(universidad == "UNAM", salario >= 5533) #2 o más condiciones
+df %>% filter((universidad == "UNAM" | salario >= 5533)) #una u otra condición
 #select + filter
-df %>% select(nombre, salario) %>% filter(salario == min(salario)) #seleciona solo las columnas que quieres y las filtra
+df %>% select(nombre, salario) %>% filter(salario == min(salario)) #seleccionar y filtrar
 
 #--------------------GROUP BY --------------------  
-df %>% group_by(universidad) %>% count() %>% arrange(n) #agrupa cuantos tienes por uni con desc(n) de mayor a menor
-df %>% group_by(Genero) %>% summarise(mean(salario)) #agrupar y sacar estadisitca
-#cuando usas groupby o cualquiera de dplyr debe ir con summarise
-mean(df$salario) #solo el valor sirven sin summarise
+df %>% group_by(universidad) %>% count() %>% arrange(n) #agrupa por universidad y cuenta (desc) 
+df %>% group_by(Genero) %>% summarise(mean(salario)) #agrupar y sacar estadística
 
 #Cuenta cuantas mujeres y hombres tiene por universidad y el total
 df %>%
@@ -39,13 +37,14 @@ df %>%
   pivot_wider(names_from = Género, values_from = n, values_fill = 0) %>%
   mutate(Total = Femenino + Masculino)
 
-#Suma por universidad
+#Suma de artículos por universidad
 df %>%                                         
   group_by(Universidad) %>%                        
   summarise_at(vars(Articulos),                 
                list(TotalDeArticulos = sum))
 #---------------------NOMBRE DE FILAS -----------------------
-df <- df %>% column_to_rownames(var = "nombre") #Hace que la columna que pongas en "var" sean etiquetas de fila
+#Convertir columna en etiquetas de fila
+df <- df %>% column_to_rownames(var = "nombre") 
 df <- df %>% rownames_to_column(var = "nombre") #regresa las etiquetas a columna
 
 #-----------------------RENOMBRAR COLUMNAS -----------------------
@@ -54,7 +53,7 @@ df %>% select(NombreNuevo = NombreActual, Genero, universidad) #lo mismo
 colnames(df) <- c("País", "Género","universidad")
 
 #------------------- MUTATE------------------------------
-df %>% mutate(SalarioDia = salario/30) #Crea una nueva columna diviendo la salario/30
+df %>% mutate(SalarioDia = salario/30) #Crea una nueva columna
 df_new <- df %>% transform(NivelSalario = case_when(  
   salario < 3000 ~ "Bajo",                           
   salario >= 3000 & salario <= 7000 ~ "Medio",
@@ -65,10 +64,11 @@ orden <- c("Bajo", "Medio", "Alto")
 df_new$NivelSalario <- factor(df_new$NivelSalario, levels = orden)
 
 df %>% 
-  transform(Grado = as.factor(Grado) #también se puede con mutate
+  transform(Grado = as.factor(Grado) #también se puede con transform
             
 #----------------------------EDITAR CELDAS---------------------------
 df_new %>% mutate(universidad = if_else(universidad == "UNAM", "UNAM C.U", universidad))
+df$Pais[df$Nombre == "Jorge"] <- "Mexico"
 
 #----------------------------SEPARAR/UNIR COLUMNAS------------------------------
 df_separado <- df %>%
@@ -156,15 +156,15 @@ codigo_html <- "<table>\n"
 codigo_html <- paste0(codigo_html, "<thead>\n<tr>\n<th>Nombre</th>\n<th>Género</th>\n<th>linea1</th>\n<th>Residencia</th>\n<th>UTrabajo</th>\n<th>Perfil</th>\n</tr>\n</thead>\n")
 codigo_html <- paste0(codigo_html, "<tbody>\n")
 
-for (i in 1:nrow(BasePagina)) {
+for (i in 1:nrow(df)) {
   codigo_html <- paste0(codigo_html, "<tr>\n")
-  codigo_html <- paste0(codigo_html, "<td>", BasePagina$Nombre[i], "</td>\n")
-  codigo_html <- paste0(codigo_html, "<td>", BasePagina$Género[i], "</td>\n")
-  codigo_html <- paste0(codigo_html, "<td>", BasePagina$linea1[i], "</td>\n")
-  codigo_html <- paste0(codigo_html, "<td>", BasePagina$Residencia[i], "</td>\n")
-  codigo_html <- paste0(codigo_html, "<td>", BasePagina$UTrabajo[i], "</td>\n")
+  codigo_html <- paste0(codigo_html, "<td>", df$Nombre[i], "</td>\n")
+  codigo_html <- paste0(codigo_html, "<td>", df$Género[i], "</td>\n")
+  codigo_html <- paste0(codigo_html, "<td>", df$linea1[i], "</td>\n")
+  codigo_html <- paste0(codigo_html, "<td>", df$Residencia[i], "</td>\n")
+  codigo_html <- paste0(codigo_html, "<td>", df$UTrabajo[i], "</td>\n")
   
-  link <- BasePagina$Perfil[i]
+  link <- df$Perfil[i]
   if (!is.na(link)) {
     codigo_html <- paste0(codigo_html, "<td><a href=\"", link, "\" target=\"_blank\">", link, "</a></td>\n")
   } else {
